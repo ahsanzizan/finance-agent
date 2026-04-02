@@ -14,6 +14,6 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "ollama": "^0.6.3"
+    "zod": "^4.3.6"
   }
 }
