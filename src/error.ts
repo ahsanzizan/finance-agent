@@ -18,3 +18,15 @@ export class OllamaError extends Error {
     this.name = "OllamaError";
   }
 }
+
+export class JsonParseError extends Error {
+  public readonly raw: string;
+  public readonly stage: string;
+
+  constructor(message: string, raw: string, stage: string) {
+    super(message);
+    this.name = "JsonParseError";
+    this.raw = raw;
+    this.stage = stage;
+  }
+}
