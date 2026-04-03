@@ -6,6 +6,7 @@ const envSchema = z.object({
     .default("development"),
   OLLAMA_BASE_URL: z.url("OLLAMA_BASE_URL is required"),
   OLLAMA_MODEL: z.string("OLLAMA_MODEL is required"),
+  FINNHUB_API_KEY: z.string("FINNHUB_API_KEY is required"),
 });
 
 const parsed = envSchema.safeParse(process.env);
