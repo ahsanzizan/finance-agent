@@ -1,6 +1,7 @@
 import { env } from "./env";
 import { OllamaError } from "./error";
 import type { OllamaRequest, OllamaResponse } from "./types/ollama";
+import { parseToolArguments } from "./utils/parser";
 
 export class OllamaClient {
   private baseUrl: string;
@@ -44,6 +45,30 @@ export class OllamaClient {
     }
 
     return res.json() as Promise<OllamaResponse>;
+  }
+
+  // This is essentially just chat but with pre-parsed tool call arguments (at least that's the plan)
+  async chatWithParsedTools(
+    req: Omit<OllamaRequest, "model" | "stream">,
+  ): Promise<OllamaResponse> {
+    const response = await this.chat(req);
+
+    for (const choice of response.choices) {
+      const toolCalls = choice.message.tool_calls;
+      if (!toolCalls) continue;
+
+      for (const toolCall of toolCalls) {
+        // Mutate the arguments in-place to ensure downstream code can parse the arguments
+        const parsed = parseToolArguments(
+          toolCall.function.arguments,
+          toolCall.function.name,
+        );
+
+        toolCall.function.arguments = JSON.stringify(parsed);
+      }
+    }
+
+    return response;
   }
 }
 

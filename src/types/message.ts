@@ -5,10 +5,10 @@ export interface TextMessage {
   content: string;
 }
 
-export interface ToolMessage {
+export interface ToolResultMessage {
   role: "tool";
   content: string;
-  toolCallId: string;
+  tool_call_id: string;
 }
 
-export type Message = TextMessage | ToolMessage;
+export type Message = TextMessage | ToolResultMessage;

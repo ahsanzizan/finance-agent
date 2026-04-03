@@ -11,13 +11,13 @@ export interface ToolCall {
   function: ToolCallFunction;
 }
 
-export interface ToolCallMessage {
+export interface AssistantToolCallMessage {
   role: "assistant";
   content: null;
   tool_calls: ToolCall[];
 }
 
-export type ConversationMessage = Message | ToolCallMessage;
+export type ConversationMessage = Message | AssistantToolCallMessage;
 
 export interface ToolParameterProperty {
   type: string;
