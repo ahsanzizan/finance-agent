@@ -92,14 +92,12 @@ export class FinancialAgent {
       for (const toolCall of message.tool_calls) {
         const { name, arguments: rawArgs } = toolCall.function;
 
-        this.log(`   -> Calling: ${name}(${rawArgs.slice(0, 80)}...)`);
+        this.log(`  -> Calling: ${name}(${rawArgs.slice(0, 80)}...)`);
 
         const toolStart = Date.now();
 
-        // TODO: Human approval lives here
         const approved = await this.requestApproval(name, rawArgs);
         if (!approved) {
-          // Push a rejection result so the model can reason about it
           const rejectionResult: ToolResultMessage = {
             role: "tool",
             content: JSON.stringify({ error: "User rejected this tool call." }),
@@ -110,22 +108,20 @@ export class FinancialAgent {
           continue;
         }
 
-        // Execute the tool
-        const resultJson = await this.registry.execute(name, rawArgs);
+        const effectiveArgs = this.consumePendingEdit() ?? rawArgs;
+
+        const resultJson = await this.registry.execute(name, effectiveArgs);
         const durationMs = Date.now() - toolStart;
 
         this.log(`   Result (${durationMs}ms): ${resultJson.slice(0, 120)}`);
 
-        // Track for the run result summary
         toolsUsed.push({
           toolName: name,
-          arguments: JSON.parse(rawArgs) as Record<string, unknown>,
+          arguments: JSON.parse(effectiveArgs) as Record<string, unknown>,
           result: resultJson,
           durationMs,
         });
 
-        // Push tool result into history with matching tool_call_id
-        // The id linkage is how the model knows which result belongs to which call
         const toolResultMessage: ToolResultMessage = {
           role: "tool",
           content: resultJson,
@@ -145,7 +141,7 @@ export class FinancialAgent {
         .at(-1)?.content ?? "(max iterations reached with no final answer)";
 
     console.warn(
-      `Agent hit maxIterations (${this.config.maxIterations}) without stopping.`,
+      `Max iterations hit (${this.config.maxIterations}) without stopping.`,
     );
 
     return {
@@ -160,7 +156,6 @@ export class FinancialAgent {
     _toolName: string,
     _rawArgs: string,
   ): Promise<boolean> {
-    // TODO: Take stdin prompt later
     return true;
   }
 
@@ -169,5 +164,9 @@ export class FinancialAgent {
   }
   getHistory(): ConversationMessage[] {
     return [...(this.history ?? [])];
+  }
+
+  protected consumePendingEdit(): string | null {
+    return null;
   }
 }
